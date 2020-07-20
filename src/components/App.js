@@ -2,7 +2,7 @@ import React from 'react';
 import { data } from '../data';
 import Navbar from './Navbar';
 import MovieCard from './MovieCard';
-import { addMovies } from '../actions';
+import { addMovies,setShowFavourite } from '../actions';
 // import { render } from 'react-dom';
 
 
@@ -16,6 +16,7 @@ class  App extends React.Component {
     const { store } = this.props;
     store.subscribe(()=>{
       console.log("subscribe");
+      console.log(store.getState())
       this.forceUpdate();
     })
     store.dispatch(addMovies(data));
@@ -23,27 +24,50 @@ class  App extends React.Component {
     console.log("state",this.props.store.getState())
     
 
+
+    
+    
+
   }
-  
+  isMovieFavourite = (movie) => {
+    const { favourites } = this.props.store.getState();
+    const index = favourites.indexOf(movie);
+    if( index!==-1) {
+      return true;
+    }
+    return false;
+  }
+  handleChangeTab = (val) =>{
+    this.props.store.dispatch(setShowFavourite(val));
+  }
   render() {
-      const { list }  = this.props.store.getState();
+      const { list,favourites,showFavourites }  = this.props.store.getState();
+      const showMovies = showFavourites ? favourites : list;
       return (
         <div className="App">
           <Navbar />
           <div className="main">
             <div className="tabs">
-              <div className="tab">Movies</div>
-              <div className="tab">Favourites</div>
+              <div className={` tab ${showFavourites? "" : "active-tabs"}`} onClick={()=>this.handleChangeTab(false)}>Movies</div>
+              <div className={`tab ${showFavourites ? "active-tabs" : ""}`} onClick={()=>this.handleChangeTab(true)}>Favourites</div>
     
             </div>
             <div className="list">
-              { list.map((movie,index)=>(
-                <MovieCard movie={movie} key={index} />
+              { showMovies.map((movie,index)=>(
+                <MovieCard 
+                movie={movie} 
+                key={index} 
+                dispatch={this.props.store.dispatch} 
+                isFavourite={this.isMovieFavourite}
+                />
               )
               )
               }
     
             </div>
+            {
+               showMovies.length === 0 ? <h1>No movies to display</h1> : null
+            }
     
           </div>
     
